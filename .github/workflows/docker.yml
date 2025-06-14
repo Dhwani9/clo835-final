@@ -2,38 +2,32 @@ name: Build and Push to ECR
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v2
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
 
-      - name: Login to Amazon ECR
-        run: |
-          aws ecr get-login-password --region us-east-1 | \
-          docker login --username AWS --password-stdin 789475484959.dkr.ecr.us-east-1.amazonaws.com
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and Push WebApp Image
-        run: |
-          docker build -t webapp ./webapp
-          docker tag webapp:latest 789475484959.dkr.ecr.us-east-1.amazonaws.com/webapp-repo:latest
-          docker push 789475484959.dkr.ecr.us-east-1.amazonaws.com/webapp-repo:latest
+    - name: Build & Push Webapp
+      run: |
+        docker build -t ${{ secrets.ECR_WEBAPP_REPO }} ./webapp
+        docker push ${{ secrets.ECR_WEBAPP_REPO }}
 
-      - name: Build and Push MySQL Image
-        run: |
-          docker build -t mysql ./mysql
-          docker tag mysql:latest 789475484959.dkr.ecr.us-east-1.amazonaws.com/mysql-repo:latest
-          docker push 789475484959.dkr.ecr.us-east-1.amazonaws.com/mysql-repo:latest
+    - name: Build & Push MySQL
+      run: |
+        docker build -t ${{ secrets.ECR_MYSQL_REPO }} ./mysql-custom
+        docker push ${{ secrets.ECR_MYSQL_REPO }}
