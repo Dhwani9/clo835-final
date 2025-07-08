@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-pod
+  namespace: webapp-ns
+  labels:
+    app: webapp
+spec:
+  containers:
+    - name: web-container
+      image: 789475484959.dkr.ecr.us-east-1.amazonaws.com/webapp:latest
+      ports:
+        - containerPort: 80
+      env:
+        - name: DBHOST
+          value: "mysql.mysql-ns.svc.cluster.local"
+        - name: DBPORT
+          value: "3306"      # ✅ REQUIRED
+        - name: DBPWD
+          value: "root"
+        - name: APP_COLOR
+          value: "pink"
+  imagePullSecrets:
+    - name: regcred
