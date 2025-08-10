@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ app_name }} — {{ app_slogan }}</title>
+  <style>
+    body {
+      margin: 0; height: 100vh;
+      background-image: url("{{ url_for('static', filename='bg/bg.jpg') }}");
+      background-size: cover; background-position: center; background-repeat: no-repeat;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-family: Arial, sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.6);
+    }
+    h1 { margin: 0; font-size: 3rem; }
+    p { margin-top: .5rem; font-size: 1.25rem; opacity: .9; }
+    footer { position: absolute; bottom: 16px; opacity: .8; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <h1>{{ app_name }}</h1>
+  <p>{{ app_slogan }}</p>
+  <footer>Background image loaded from private S3</footer>
+</body>
+</html>
