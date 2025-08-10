@@ -5,8 +5,8 @@ on:
     branches: [ main ]   # Runs only when you push/merge to main
 
 env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}           # from GitHub repo secrets
-  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}   # from GitHub repo secrets
+  AWS_REGION: ${{ secrets.AWS_REGION }}             # from GitHub repo secrets
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}     # from GitHub repo secrets
   IMAGE_TAG: ${{ secrets.IMAGE_TAG || github.sha }} # "latest" if set, else commit SHA
 
 jobs:
@@ -15,14 +15,18 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4  # Pulls your repo code
+        uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (static keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}       # from repo secrets
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # from repo secrets
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # leave unset if using long-term keys
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Who am I (sanity check)
+        run: aws sts get-caller-identity
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -44,4 +48,3 @@ jobs:
         run: |
           echo "Pushed image:"
           echo "${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}"
-
