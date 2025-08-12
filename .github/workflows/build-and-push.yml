@@ -4,47 +4,33 @@ on:
   push:
     branches: [ main ]
 
-env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-  IMAGE_TAG: ${{ secrets.IMAGE_TAG || github.sha }}
-
 jobs:
-  build-push:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Configure AWS credentials (STS session)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}   # <-- added
-          aws-region: ${{ env.AWS_REGION }}
+    # ✅ Proper AWS credentials configuration
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Who am I (sanity check)
-        run: aws sts get-caller-identity
+    # ✅ ECR login (uses credentials from above automatically)
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v1
 
-      - name: ECR token test
-        run: aws ecr get-login-password --region "$AWS_REGION" | head -c 8 && echo " ...OK"
+    - name: Build and Push WebApp Image
+      run: |
+        docker build -t ${{ secrets.ECR_WEBAPP_REPO }} ./webapp
+        docker push ${{ secrets.ECR_WEBAPP_REPO }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build image
-        run: docker build -t $ECR_REPOSITORY:build .
-
-      - name: Tag image
-        run: docker tag $ECR_REPOSITORY:build ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
-
-      - name: Push image
-        run: docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
-
-      - name: Summary
-        run: |
-          echo "Pushed image:"
-          echo "${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest"
+    - name: Build and Push MySQL Image
+      run: |
+        docker build -t ${{ secrets.ECR_MYSQL_REPO }} ./mysql-custom
+        docker push ${{ secrets.ECR_MYSQL_REPO }}
