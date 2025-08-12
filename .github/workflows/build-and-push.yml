@@ -27,10 +27,10 @@ jobs:
 
     - name: Build and Push WebApp Image
       run: |
-        docker build -t ${{ secrets.ECR_WEBAPP_REPO }} ./webapp
+        docker build -t ${{ secrets.ECR_WEBAPP_REPO }} ./clo835-webapp
         docker push ${{ secrets.ECR_WEBAPP_REPO }}
 
     - name: Build and Push MySQL Image
       run: |
-        docker build -t ${{ secrets.ECR_MYSQL_REPO }} ./mysql-custom
+        docker build -t ${{ secrets.ECR_MYSQL_REPO }} ./clo835-mysql
         docker push ${{ secrets.ECR_MYSQL_REPO }}
